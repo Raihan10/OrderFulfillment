@@ -6,7 +6,7 @@
       <creator>ASUS</creator>
       <description>No description provided</description>
       <coverage>4.3.1.772</coverage>
-      <version>0.10</version>
+      <version>0.9</version>
       <persistent>false</persistent>
       <identifier>UID_01816004-5ce6-4b7d-8b4d-aaa4a7c6ae2b</identifier>
     </metaData>
@@ -246,12 +246,6 @@
           </flowsInto>
           <join code="xor" />
           <split code="xor" />
-          <completedMappings>
-            <mapping>
-              <expression query="&lt;POApproval&gt;{/__Approve_Purchase_Order/POApproval/text()}&lt;/POApproval&gt;" />
-              <mapsTo>POApproval</mapsTo>
-            </mapping>
-          </completedMappings>
           <resourcing>
             <offer initiator="user" />
             <allocate initiator="user" />
@@ -291,18 +285,6 @@
           </flowsInto>
           <join code="xor" />
           <split code="and" />
-          <startingMappings>
-            <mapping>
-              <expression query="&lt;POrder&gt;{/Ordering/POrder/text()}&lt;/POrder&gt;" />
-              <mapsTo>POrder</mapsTo>
-            </mapping>
-          </startingMappings>
-          <completedMappings>
-            <mapping>
-              <expression query="&lt;POrder&gt;{/Modify_Purchase_Order/POrder/text()}&lt;/POrder&gt;" />
-              <mapsTo>POrder</mapsTo>
-            </mapping>
-          </completedMappings>
           <resourcing>
             <offer initiator="user" />
             <allocate initiator="user" />
@@ -317,10 +299,6 @@
           </flowsInto>
           <join code="xor" />
           <split code="and" />
-          <timer>
-            <trigger>OnEnabled</trigger>
-            <duration>P3D</duration>
-          </timer>
           <resourcing>
             <offer initiator="user" />
             <allocate initiator="user" />
@@ -614,23 +592,11 @@
     </decomposition>
     <decomposition id="Modify_Purchase_Order" xsi:type="WebServiceGatewayFactsType">
       <name>Modify Purchase Order</name>
-      <inputParam>
-        <index>0</index>
-        <name>POrder</name>
-        <type>string</type>
-        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
-      </inputParam>
-      <outputParam>
-        <index>0</index>
-        <name>POrder</name>
-        <type>string</type>
-        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
-      </outputParam>
       <externalInteraction>manual</externalInteraction>
     </decomposition>
     <decomposition id="Order_Timeout" xsi:type="WebServiceGatewayFactsType">
       <name>Order Timeout</name>
-      <externalInteraction>automated</externalInteraction>
+      <externalInteraction>manual</externalInteraction>
     </decomposition>
     <decomposition id="Process_Shipment_Payment" xsi:type="WebServiceGatewayFactsType">
       <name>Process Shipment Payment</name>
@@ -646,13 +612,6 @@
     </decomposition>
     <decomposition id="__Approve_Purchase_Order" xsi:type="WebServiceGatewayFactsType">
       <name>Approve Purchase Order</name>
-      <outputParam>
-        <index>0</index>
-        <name>POApproval</name>
-        <type>boolean</type>
-        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
-        <defaultValue />
-      </outputParam>
       <externalInteraction>manual</externalInteraction>
     </decomposition>
   </specification>
@@ -889,14 +848,14 @@
             </attributes>
           </label>
         </container>
-        <flow source="Process_Shipment_Payment" target="Issue_Credit_Adjustment">
-          <ports in="2" out="12"/>
+        <flow source="InputCondition_4" target="T">
+          <ports in="13" out="12"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="InputCondition_4" target="T">
-          <ports in="13" out="12"/>
+        <flow source="Process_Shipment_Payment" target="Issue_Credit_Adjustment">
+          <ports in="2" out="12"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
@@ -1091,6 +1050,21 @@
           </attributes>
         </vertex>
       </net>
+      <net id="Freight_in_Transit">
+        <bounds x="0" y="0" w="1045" h="531"/>
+        <frame x="0" y="0" w="1048" h="534"/>
+        <viewport x="0" y="0" w="1048" h="534"/>
+        <vertex id="InputCondition_3">
+          <attributes>
+            <bounds x="36" y="256" w="32" h="32"/>
+          </attributes>
+        </vertex>
+        <vertex id="OutputCondition_3">
+          <attributes>
+            <bounds x="972" y="256" w="32" h="32"/>
+          </attributes>
+        </vertex>
+      </net>
       <net id="Ordering">
         <bounds x="0" y="0" w="1045" h="531"/>
         <frame x="0" y="0" w="1048" h="534"/>
@@ -1192,6 +1166,12 @@
             </points>
           </attributes>
         </flow>
+        <flow source="InputCondition_1" target="Create_Purchase_Order">
+          <ports in="11" out="10"/>
+          <attributes>
+            <lineStyle>11</lineStyle>
+          </attributes>
+        </flow>
         <flow source="Create_Purchase_Order" target="__Approve_Purchase_Order">
           <ports in="13" out="2"/>
           <attributes>
@@ -1200,12 +1180,6 @@
               <value x="283" y="115.5"/>
               <value x="406" y="99.5"/>
             </points>
-          </attributes>
-        </flow>
-        <flow source="InputCondition_1" target="Create_Purchase_Order">
-          <ports in="11" out="10"/>
-          <attributes>
-            <lineStyle>11</lineStyle>
           </attributes>
         </flow>
         <flow source="C" target="Confirm_Purchase_Order">
@@ -1278,21 +1252,6 @@
             </points>
           </attributes>
         </flow>
-      </net>
-      <net id="Freight_in_Transit">
-        <bounds x="0" y="0" w="1045" h="531"/>
-        <frame x="0" y="0" w="1048" h="534"/>
-        <viewport x="0" y="0" w="1048" h="534"/>
-        <vertex id="InputCondition_3">
-          <attributes>
-            <bounds x="36" y="256" w="32" h="32"/>
-          </attributes>
-        </vertex>
-        <vertex id="OutputCondition_3">
-          <attributes>
-            <bounds x="972" y="256" w="32" h="32"/>
-          </attributes>
-        </vertex>
       </net>
       <net id="Net">
         <bounds x="0" y="0" w="1045" h="531"/>
@@ -1396,6 +1355,12 @@
             </points>
           </attributes>
         </flow>
+        <flow source="Ordering" target="Carrier_Appointment">
+          <ports in="2" out="10"/>
+          <attributes>
+            <lineStyle>11</lineStyle>
+          </attributes>
+        </flow>
         <flow source="Carrier_Appointment" target="OutputCondition">
           <ports in="1" out="12"/>
           <attributes>
@@ -1404,12 +1369,6 @@
               <value x="437" y="179.75"/>
               <value x="884" y="131.5"/>
             </points>
-          </attributes>
-        </flow>
-        <flow source="Ordering" target="Carrier_Appointment">
-          <ports in="2" out="10"/>
-          <attributes>
-            <lineStyle>11</lineStyle>
           </attributes>
         </flow>
         <flow source="Freight_in_Transit" target="Freight_Delivered">
