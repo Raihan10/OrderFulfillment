@@ -6,7 +6,7 @@
       <creator>ASUS</creator>
       <description>No description provided</description>
       <coverage>4.3.1.772</coverage>
-      <version>0.16</version>
+      <version>0.17</version>
       <persistent>false</persistent>
       <identifier>UID_01816004-5ce6-4b7d-8b4d-aaa4a7c6ae2b</identifier>
     </metaData>
@@ -1173,6 +1173,28 @@
             </offer>
             <allocate initiator="user" />
             <start initiator="system" />
+            <privileges>
+              <privilege>
+                <name>canSuspend</name>
+                <allowall>true</allowall>
+              </privilege>
+              <privilege>
+                <name>canReallocateStateless</name>
+                <allowall>true</allowall>
+              </privilege>
+              <privilege>
+                <name>canReallocateStateful</name>
+                <allowall>true</allowall>
+              </privilege>
+              <privilege>
+                <name>canDeallocate</name>
+                <allowall>true</allowall>
+              </privilege>
+              <privilege>
+                <name>canPile</name>
+                <allowall>true</allowall>
+              </privilege>
+            </privileges>
           </resourcing>
           <decomposesTo id="Create_Purchase_Order" />
         </task>
@@ -1208,6 +1230,12 @@
             </offer>
             <allocate initiator="user" />
             <start initiator="user" />
+            <privileges>
+              <privilege>
+                <name>canDelegate</name>
+                <allowall>true</allowall>
+              </privilege>
+            </privileges>
           </resourcing>
           <decomposesTo id="__Approve_Purchase_Order" />
         </task>
@@ -1243,6 +1271,12 @@
             </offer>
             <allocate initiator="user" />
             <start initiator="user" />
+            <privileges>
+              <privilege>
+                <name>canDeallocate</name>
+                <allowall>true</allowall>
+              </privilege>
+            </privileges>
           </resourcing>
           <decomposesTo id="Confirm_Purchase_Order" />
         </task>
@@ -1267,6 +1301,12 @@
             </offer>
             <allocate initiator="user" />
             <start initiator="user" />
+            <privileges>
+              <privilege>
+                <name>canSkip</name>
+                <allowall>true</allowall>
+              </privilege>
+            </privileges>
           </resourcing>
           <decomposesTo id="Modify_Purchase_Order" />
         </task>
