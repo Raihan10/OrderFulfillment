@@ -6,7 +6,7 @@
       <creator>ASUS</creator>
       <description>No description provided</description>
       <coverage>4.3.1.772</coverage>
-      <version>0.28</version>
+      <version>0.31</version>
       <persistent>false</persistent>
       <identifier>UID_01816004-5ce6-4b7d-8b4d-aaa4a7c6ae2b</identifier>
     </metaData>
@@ -425,16 +425,16 @@
           <name>Carrier Appointment</name>
           <flowsInto>
             <nextElementRef id="Payment" />
-            <predicate>true()</predicate>
-            <isDefaultFlow />
+            <predicate>/Overall/SP_timedout/text()='false'</predicate>
           </flowsInto>
           <flowsInto>
             <nextElementRef id="OutputCondition" />
-            <predicate>true()</predicate>
+            <predicate>/Overall/SP_timedout/text()='true'</predicate>
+            <isDefaultFlow />
           </flowsInto>
           <flowsInto>
             <nextElementRef id="Freight_in_Transit" />
-            <predicate>true()</predicate>
+            <predicate>/Overall/SP_timedout/text()='false'</predicate>
           </flowsInto>
           <join code="and" />
           <split code="or" />
@@ -639,6 +639,20 @@
           </flowsInto>
           <join code="xor" />
           <split code="and" />
+          <startingMappings>
+            <mapping>
+              <expression query="&lt;a&gt;{4}&lt;/a&gt;" />
+              <mapsTo>a</mapsTo>
+            </mapping>
+            <mapping>
+              <expression query="&lt;b&gt;{count(/Carrier_Appointment/POrder/Order/OrderLines/*)}&lt;/b&gt;" />
+              <mapsTo>b</mapsTo>
+            </mapping>
+            <mapping>
+              <expression query="&lt;POrder&gt;{/Carrier_Appointment/POrder/*}&lt;/POrder&gt;" />
+              <mapsTo>POrder</mapsTo>
+            </mapping>
+          </startingMappings>
           <resourcing>
             <offer initiator="user" />
             <allocate initiator="user" />
@@ -696,9 +710,27 @@
           </flowsInto>
           <join code="xor" />
           <split code="and" />
+          <startingMappings>
+            <mapping>
+              <expression query="&lt;OrderNumber&gt;{/Carrier_Appointment/POrder/Order/OrderNumber/text()}&lt;/OrderNumber&gt;" />
+              <mapsTo>OrderNumber</mapsTo>
+            </mapping>
+            <mapping>
+              <expression query="&lt;DeliveryLocation&gt;{/Carrier_Appointment/POrder/DeliveryLocation/text()}&lt;/DeliveryLocation&gt;" />
+              <mapsTo>DeliveryLocation</mapsTo>
+            </mapping>
+          </startingMappings>
           <resourcing>
-            <offer initiator="user" />
-            <allocate initiator="user" />
+            <offer initiator="system">
+              <distributionSet>
+                <initialSet />
+              </distributionSet>
+            </offer>
+            <allocate initiator="system">
+              <allocator>
+                <name>ShortestQueue</name>
+              </allocator>
+            </allocate>
             <start initiator="user" />
           </resourcing>
           <decomposesTo id="Prepare_Route_Guide" />
@@ -1675,7 +1707,41 @@
     </decomposition>
     <decomposition id="Calculate_Carrier_Timeout" xsi:type="WebServiceGatewayFactsType">
       <name>Calculate Carrier Timeout</name>
-      <externalInteraction>manual</externalInteraction>
+      <inputParam>
+        <index>0</index>
+        <documentation>The first number to add</documentation>
+        <name>a</name>
+        <type>long</type>
+        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
+      </inputParam>
+      <inputParam>
+        <index>1</index>
+        <name>POrder</name>
+        <type>PurchaseOrderType</type>
+        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
+      </inputParam>
+      <inputParam>
+        <index>2</index>
+        <documentation>The second number to add</documentation>
+        <name>b</name>
+        <type>long</type>
+        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
+      </inputParam>
+      <outputParam>
+        <index>1</index>
+        <name>POrder</name>
+        <type>PurchaseOrderType</type>
+        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
+      </outputParam>
+      <outputParam>
+        <index>3</index>
+        <documentation>The result of the addition</documentation>
+        <name>c</name>
+        <type>long</type>
+        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
+      </outputParam>
+      <codelet>org.yawlfoundation.yawl.resourcing.codelets.ExampleCodelet</codelet>
+      <externalInteraction>automated</externalInteraction>
     </decomposition>
     <decomposition id="Carrier_Timeout" xsi:type="WebServiceGatewayFactsType">
       <name>Carrier Timeout</name>
@@ -1785,6 +1851,30 @@
     </decomposition>
     <decomposition id="Prepare_Route_Guide" xsi:type="WebServiceGatewayFactsType">
       <name>Prepare Route Guide</name>
+      <inputParam>
+        <index>0</index>
+        <name>OrderNumber</name>
+        <type>string</type>
+        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
+      </inputParam>
+      <inputParam>
+        <index>1</index>
+        <name>DeliveryLocation</name>
+        <type>string</type>
+        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
+      </inputParam>
+      <outputParam>
+        <index>0</index>
+        <name>OrderNumber</name>
+        <type>string</type>
+        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
+      </outputParam>
+      <outputParam>
+        <index>1</index>
+        <name>DeliveryLocation</name>
+        <type>string</type>
+        <namespace>http://www.w3.org/2001/XMLSchema</namespace>
+      </outputParam>
       <externalInteraction>manual</externalInteraction>
     </decomposition>
     <decomposition id="Prepare_Transportation_Quote" xsi:type="WebServiceGatewayFactsType">
@@ -1927,6 +2017,12 @@
             </points>
           </attributes>
         </flow>
+        <flow source="Ordering" target="Carrier_Appointment">
+          <ports in="2" out="10"/>
+          <attributes>
+            <lineStyle>11</lineStyle>
+          </attributes>
+        </flow>
         <flow source="Carrier_Appointment" target="OutputCondition">
           <ports in="1" out="12"/>
           <attributes>
@@ -1935,12 +2031,6 @@
               <value x="437" y="179.75"/>
               <value x="884" y="131.5"/>
             </points>
-          </attributes>
-        </flow>
-        <flow source="Ordering" target="Carrier_Appointment">
-          <ports in="2" out="10"/>
-          <attributes>
-            <lineStyle>11</lineStyle>
           </attributes>
         </flow>
         <flow source="Freight_in_Transit" target="Freight_Delivered">
@@ -2817,14 +2907,14 @@
             </attributes>
           </label>
         </container>
-        <flow source="Arrange_Pickup_Appointment_2" target="Create_Bill_of_Lading">
-          <ports in="12" out="3"/>
+        <flow source="Arrange_Pickup_Appointment_3" target="T_1">
+          <ports in="13" out="0"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="Arrange_Pickup_Appointment_3" target="T_1">
-          <ports in="13" out="0"/>
+        <flow source="Arrange_Pickup_Appointment_2" target="Create_Bill_of_Lading">
+          <ports in="12" out="3"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
@@ -2847,14 +2937,14 @@
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="T_1" target="Pickup_and_delivery_information_completed">
-          <ports in="13" out="12"/>
+        <flow source="Arrange_Pickup_Appointment" target="Arrange_Delivery_Appointment_2">
+          <ports in="11" out="10"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="Arrange_Pickup_Appointment" target="Arrange_Delivery_Appointment_2">
-          <ports in="11" out="10"/>
+        <flow source="T_1" target="Pickup_and_delivery_information_completed">
+          <ports in="13" out="12"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
@@ -2889,14 +2979,14 @@
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="Arrange_Delivery_Appointment_3" target="Pickup_and_delivery_information_completed">
-          <ports in="11" out="13"/>
+        <flow source="C_7" target="Produce_Shipment_Notice">
+          <ports in="12" out="3"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="C_7" target="Produce_Shipment_Notice">
-          <ports in="12" out="3"/>
+        <flow source="Arrange_Delivery_Appointment_3" target="Pickup_and_delivery_information_completed">
+          <ports in="11" out="13"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
@@ -2947,14 +3037,14 @@
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="C_7" target="Modify_Pickup_Appointment_1">
-          <ports in="11" out="10"/>
+        <flow source="Calculate_Carrier_Timeout" target="C_5">
+          <ports in="1" out="10"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="Calculate_Carrier_Timeout" target="C_5">
-          <ports in="1" out="10"/>
+        <flow source="C_7" target="Modify_Pickup_Appointment_1">
+          <ports in="11" out="10"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
@@ -3011,13 +3101,13 @@
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="Modify_Delivery_Appointment" target="C_7">
+        <flow source="InputCondition_2" target="Calculate_Carrier_Timeout">
           <ports in="11" out="10"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="InputCondition_2" target="Calculate_Carrier_Timeout">
+        <flow source="Modify_Delivery_Appointment" target="C_7">
           <ports in="11" out="10"/>
           <attributes>
             <lineStyle>11</lineStyle>
@@ -3113,14 +3203,14 @@
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="FTL" target="Create_Shipment_Information_Document">
-          <ports in="11" out="2"/>
+        <flow source="Prepare_Transportation_Quote" target="FTL">
+          <ports in="4" out="10"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
         </flow>
-        <flow source="Prepare_Transportation_Quote" target="FTL">
-          <ports in="4" out="10"/>
+        <flow source="FTL" target="Create_Shipment_Information_Document">
+          <ports in="11" out="2"/>
           <attributes>
             <lineStyle>11</lineStyle>
           </attributes>
@@ -3295,12 +3385,6 @@
             </points>
           </attributes>
         </flow>
-        <flow source="InputCondition_1" target="Create_Purchase_Order">
-          <ports in="11" out="10"/>
-          <attributes>
-            <lineStyle>11</lineStyle>
-          </attributes>
-        </flow>
         <flow source="Create_Purchase_Order" target="__Approve_Purchase_Order">
           <ports in="13" out="2"/>
           <attributes>
@@ -3309,6 +3393,12 @@
               <value x="283" y="115.5"/>
               <value x="406" y="99.5"/>
             </points>
+          </attributes>
+        </flow>
+        <flow source="InputCondition_1" target="Create_Purchase_Order">
+          <ports in="11" out="10"/>
+          <attributes>
+            <lineStyle>11</lineStyle>
           </attributes>
         </flow>
         <flow source="C" target="Confirm_Purchase_Order">
